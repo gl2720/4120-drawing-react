@@ -1,33 +1,62 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useState, useRef, useEffect } from 'react'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const canvasRef = useRef(null);
+  const [ctx, setCtx] = useState(null);
+  useEffect(() => {
+    const canvas = document.getElementById("canvasElement");
+    canvasRef.current = canvas;
+    const context = canvas.getContext("2d");
+    setCtx(context);
+  }, []);
+
+  const [drawing, setDrawing] = useState(false)
+  const [erase, setErase] = useState(false)
+  const [strokeColor, setColor] = useState('#000000')
+  const [lineWidth, setWidth] = useState(3)
+
+  const handleDrawDown = (e) => {
+    setDrawing(true)
+    if (erase) {
+    ctx.strokeStyle = 'white'; // bg color
+    } else {
+    ctx.strokeStyle = strokeColor;
+    }
+    ctx.lineWidth = lineWidth;
+    ctx.beginPath();
+    ctx.moveTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+  }
+  const handleDrawMove = (e) => {
+    if (drawing) {
+      ctx.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+      ctx.stroke();
+    }
+  }
+  const handleDrawUp = () => {
+    setDrawing(false)
+  }
+
+  const handleClear = () => {
+    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+  }
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <header>
+          <title>Paint</title>
+          <p>Go Wild</p>
+      </header>
+      <div id="container">
+      <div id="tools">
+          <input type="color" id="colorPicker" value={strokeColor} onChange={(e) => setColor(e.target.value)}/>
+          <input type="range" id="sizePicker"  orient="vertical" min="1" max="10" value={lineWidth} onChange={(e) => setWidth(e.target.value)}/>
+          <button id="eraseButton" onClick={() => setErase(!erase)} className={erase ? 'clicked' : ''}>Erase</button>
+          <button id="clearButton" onClick={handleClear}>Clear All</button>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
+      <canvas id="canvasElement" width="800" height="600" style= {{border: "1px solid black" }}
+      onMouseDown={(e) => handleDrawDown(e)} onMouseMove={(e) => handleDrawMove(e)} onMouseUp={handleDrawUp}>hello?</canvas>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   )
 }
